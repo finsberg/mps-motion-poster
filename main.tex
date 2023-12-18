@@ -1,0 +1,321 @@
+\documentclass[tikz,border=0cm]{standalone}
+\usepackage{type1cm}
+\usepackage{fp}
+\usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{calc}
+\usetikzlibrary{shadows}
+
+
+\usepackage{fetamont}
+\usepackage{cmbright}
+
+\usepackage{bm,amsmath,amssymb}
+\usepackage{soul}
+
+\edef\myfontscale{1.2}
+% \definecolor{simula}{RGB}{245,130,32}
+% https://intranet.simula.no/sites/default/files/simula_rebrand_readme_2016.pdf
+\definecolor{simula}{RGB}{241, 90, 34}
+\definecolor{amaranth}{rgb}{0.9, 0.17, 0.31}
+\definecolor{amber}{rgb}{1.0, 0.75, 0.0}
+
+\input{rescalefonts}
+\input{defs}
+
+\usepackage{booktabs,dcolumn}
+\usepackage{array}
+\newcolumntype{T}{>{\begingroup\bfseries}r<{\endgroup}}
+\newcolumntype{N}{D{.}{.}{-1}}
+\newcolumntype{R}{D{.}{.}{2.4}}
+\newcolumntype{K}{D{.}{.}{3.4}}
+\newcommand{\imgcase}[2]{\includegraphics[width=0.5\linewidth]{#1_#2_base}%
+\includegraphics[width=0.5\linewidth]{#1_#2_side}}
+\usepackage[tableposition=top,font=footnotesize,labelfont=bf,sf]{caption}
+
+\usepackage[margin=1in, paperwidth=48in, paperheight=48in]{geometry}
+
+\begin{document}
+
+\begin{tikzpicture}[x=30in, y=40in]
+\fill[white, use as bounding box] (0, 0) rectangle (1, 1);
+
+%%%% title %%%%
+\begingroup
+\pgfmathsetseed{3674}
+\node[decoration={random steps, segment length=1cm, amplitude=3mm}, decorate,
+      fill=simula, inner sep=1cm,
+      drop shadow={shadow yshift=1ex, shadow xshift=-1ex},
+      anchor=north, draw=none, line width=0mm]
+      (title)
+      at ($(current bounding box.north)-(0,2.5cm)$)
+  {\begin{minipage}{27in}
+   \begin{center}
+   {\ffmfamily\bfseries\color{black}
+   {\LARGE Motion estimation in cardiac microphysiological systems}} \\[0.4ex]
+   \bigskip
+   {\color{white}
+   \textbf{\underline{Henrik Finsberg}\textsuperscript{1}, Verena Charwat\textsuperscript{2}, Samuel T. Wall\textsuperscript{1}}
+   }
+
+   %\vskip-5mm\footnotesize
+   %\texttt{\{sjurug,hake,simonep,sundnes,samwall\}@simula.no}}
+   
+   \medskip
+   \textsuperscript{1}Computational Physiology, Simula Research Laboratory, 0164 Oslo, Norway \\
+    \textsuperscript{2} Organos, Inc, Berkeley, CA, United States
+   \end{center}
+  \end{minipage}};
+\endgroup
+
+%%%% introduction %%%%
+\node[anchor=north west]
+(motif title)
+at ($(current bounding box.north west)+(2cm,-12cm)$)
+{\bfseries\ffmfamily\Large\underline{Introduction}};
+
+\node[draw=none, anchor=north west]
+(motif text)
+at ( $(motif title.south west)+(1cm,0)$ )
+{\begin{minipage}{27in}
+\footnotesize
+\begin{minipage}[t]{0.32\textwidth}
+Cadiac microphysiological systems (MPS) have great potential for safer and faster drug development, as well as offering the ability to study genetic diseases. Many studies have focused on the electrophysiological aspects of these systems, however several drugs and diseases also alter the mechanical behaviour of these cells.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.32\textwidth}
+Being able to accurately and robustly assess contractile properties from optical recordings of such cells is therefore needed. In this work we investigate several optical flow techniques to estimate the motion and velocity in optical video recordings.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.32\textwidth}
+Such computations can be very CPU and memory demanding. We have therefore implemented a python library that utilizes high performance computing and can perform out-of-core computations. 
+\end{minipage}
+\end{minipage}};
+
+
+\node[draw=simula, line width=1mm, anchor=north west,
+      rounded corners=4mm, inner sep=1cm,
+      fill=simula!10!white, minimum height=16cm]
+(optflow)
+at ( $(motif text.south west)-(1cm,1cm)$ )
+{\begin{minipage}{12in}
+\vspace{0.5cm}
+\vfill
+\footnotesize
+We consider a sequence of images as $I(x, y ,t)$ at position $(x, y)$ and time $t$. At some later time, $t + \Delta t$, the pixel at $(x, y)$ has now moved to $(x + \Delta x, y + \Delta y)$. If all deformations are translations and there is no noise or change in illumination we have 
+\begin{align}
+    I(x, y, t) = I(x + \Delta x, y + \Delta y, t + \Delta t),
+\end{align}
+and in the limit we obtain the \emph{Optical flow equation}
+\begin{align}
+    \nabla I \cdot V = - \frac{\partial I}{\partial t} 
+    \label{eq:optical_flow}
+\end{align}
+where $I$ is the image sequence and $V = \begin{pmatrix} V_x \\ V_y \end{pmatrix}$ is the unknown optical flow. Since we have two unknowns and only one equation, one more equation is needed to solve the problem. Different optical flow algorithms approach this in a variety of ways.
+
+\begin{minipage}[t]{6in}
+\vspace{0pt}
+\includegraphics[width=\textwidth]{figures/known_displacement_algs.png}
+\end{minipage}\hfill
+\begin{minipage}[t]{5.5in}
+\vspace{5mm}
+\bigskip
+\textbf{$\triangleleft$ Figure:}
+\begin{enumerate}
+    \item We tested four  optical flow algorithms (Farneback, Lucas-Kanade, Block Matching[1] and Duial TV-L1) on a three different toy problems with known displacement.
+    \item The streamlines show the true displacement, while the arrows show the estimated displacement.
+    \item Among the algorithms tested, the Farneback method[2] performed best.
+\end{enumerate}
+
+\end{minipage}
+\end{minipage}};
+
+\node[anchor=east, rounded corners=3mm, fill=simula]
+(optflow title)
+at ($ (optflow.north east)!3cm!(optflow.north west) $)
+{\ffmfamily Optical flow algorithm};
+
+%%%% Feature calculation %%%%
+\node[draw=simula, line width=1mm, anchor=north west,
+      rounded corners=4mm, inner sep=1cm,
+      fill=simula!10!white, minimum height=10cm]
+(feature)
+at ($(optflow.north east)+(1cm,0)$)
+{\begin{minipage}{14.5in}
+\footnotesize
+
+From the optical flow solution we can compute the displacement and velocity traces by averaging over the pixels.
+
+\begin{minipage}[t]{0.48\textwidth}
+\vspace{0pt}
+\begin{center}
+\includegraphics[width=\textwidth]{figures/disp_velocity_first_beat.png}    
+\end{center}
+\textbf{$\triangle$ Figure:}
+We computed  features on the resulting displacement and velocity traces. Here we show example values for two different analyzed samples.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.5\textwidth}
+\vspace{5mm}
+\bigskip
+\begin{tabular}{lrr}
+\toprule
+Name & Dataset 1 & Dataset 2 \\
+\midrule
+Maximum rise velocity [$\mu$m/s] & 13.4 & 18.0 \\
+Peak twitch amplitude [$\mu$m]  & 1.3 & 1.4 \\
+Maximum relaxation velocity [$\mu$m/s] & 11.6 & 9.2 \\
+Beat duration [ms]  & 494.1 & 852.0 \\
+Time to peak twitch amplitude [ms] & 320.2 & 276.0 \\
+Time to peak contraction velocity [ms] & 102.9 & 16.3 \\
+Time to peak relaxation velocity [ms] & 373.1 & 382.3 \\
+Width at half height [ms] & 258.2 & 371.8 \\
+Start of beat [ms] & 437.5 & 859.7 \\
+End of beat [ms] & 931.6 & 1711.8 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{minipage}};
+
+\node[anchor=west, rounded corners=3mm, fill=simula]
+(feature title)
+at ($ (feature.north west)!3cm!(feature.north east) $)
+{\ffmfamily Feature calculations};
+
+%%%% Sensitivity analysis %%%%
+\node[draw=simula, line width=1mm, anchor=north west,
+      rounded corners=4mm, inner sep=1cm,
+      fill=simula!10!white, minimum height=17.5in]
+(sensitivity)
+at ($(optflow.south west)+(0,-2cm)$)
+{\begin{minipage}{12in}
+\footnotesize
+\vfill
+\vspace{0.3cm}
+The computations needed to perform motion estimation are both computationally expensive and prone to errors. Here we show result of filtering the motion vectors, timings for the different operations as well as some local differences in the displacement and velocity.
+
+\begin{minipage}[t]{0.4\textwidth}
+\vskip0pt
+\includegraphics[width=\textwidth]{figures/filtered_traces_simple.png}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.58\textwidth}
+\vskip0pt
+\textbf{$\triangleleft$ Figure:}
+We apply a filtering to the displacement and velocity in order to remove pixels with a low maximum displacement. Pixels with small maximum displacement are likely to be either pixels that does not contain cardiomyocytes, or they contain cardiomyocytes that are not contributing to the overall displacement. In these cases the signal from these pixels could potentially corrupt the resulting motion vector directions [1]. This is not a big problem for displacement vectors, since all displacement vectors are computed relative to one reference frame. However, for the velocity vectors this can result in very rapid changes in the directions of the vectors.
+\end{minipage}
+\vfill
+\vspace{0.3cm}
+\begin{minipage}[t]{0.96\textwidth}
+\vskip0pt
+\textbf{$\triangle$ Figure:} When applying the filtering, pixels with low displacement magnitude are excluded from the mean computation. The means that averages are now computed over the pixels with higher displacement values and it will thus result in a higher mean displacement. It is also clear that by applying filtering we exclude pixels that only contribute to noise in the signals, and thus the noise level in the filtered signal is reduced.
+\end{minipage}
+
+\vspace{1cm}
+\begin{minipage}[t]{0.35\textwidth}
+\vskip0pt
+\includegraphics[width=\textwidth]{figures/max_disp_vel_norm.png}
+\vskip0pt
+\textbf{$\triangle$ Figure:} 
+We computed the maximum velocity and displacement over all time steps for the two datasets, and found large regional variations.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.63\textwidth}
+\vskip0pt
+\includegraphics[width=\textwidth]{figures/timings_scale.png}
+\vskip0pt
+\textbf{$\triangle$ Figure:} Timings for the different operations during motion analysis. \emph{Resize} is the time spent down-sampling the data from original size of a lower resolution. \emph{Optical flow} is the time spent running the Farneback method, \emph{Filtering} is the time spent computing the mask and applying the filtering to both displacement and velocity. Finally \emph{mean (X)} is the time spent of computing the norm and mean of all the arrays for X (X being velocity and displacement). The blue line also show the total time spent for each resolution. 
+\end{minipage}
+\end{minipage}};
+
+\node[anchor=west, rounded corners=3mm, fill=simula]
+(sensitivity title)
+at ($ (sensitivity.north west)!3cm!(sensitivity.north east) $)
+{\ffmfamily Sensitivity analysis, local variation and timings};
+
+%%%% Sentitity analysis
+
+\node[draw=simula, line width=1mm, anchor=north west,
+      rounded corners=4mm, inner sep=1cm,
+      fill=simula!10!white, minimum height=20in]
+(drug)
+at ($(feature.south west)+(0,-2cm)$)
+{\begin{minipage}{14.5in}
+\footnotesize
+
+We tested the library on two different drugs that are known to affect the mechanics of cardiac cells, specifically using bay K 8644 and omecamtiv mercarbil.
+
+
+\begin{minipage}[t]{\textwidth}
+\vskip0pt
+\includegraphics[width=\textwidth]{figures/features.png}
+\textbf{$\triangle$ Figure:} 
+Different features for increasing dose of  BayK and Omecamtiv.
+\end{minipage}
+\vfill
+\vspace{1cm}
+Both voltage, calcium and motion data where aligned and plotted for each dose of the drugs.
+
+{\begin{minipage}[t]{\textwidth}
+\footnotesize
+\begin{minipage}[t]{0.49\textwidth}
+\vskip0pt
+\includegraphics[width=\textwidth]{figures/BayK.png}
+\textbf{$\triangle$ Figure:}
+Voltage, calcium, displacement and velocity for different doses of BayK
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.49\textwidth}
+\vskip0pt
+\includegraphics[width=\textwidth]{figures/omecamtiv.png}
+\textbf{$\triangle$ Figure:}
+Voltage, calcium, displacement and velocity for different doses of Omecamtiv
+\end{minipage}
+\end{minipage}};
+
+\end{minipage}};
+
+\node[anchor=east, rounded corners=3mm, fill=simula]
+(drug title)
+at ($ (drug.north east)!3cm!(drug.north west) $)
+{\ffmfamily Drug escalation study};
+
+We tested the library on two different drugs that are known to affect the mechanics of cardiac cells, i.e BayK and Omecamtiv.
+
+
+%%%% References %%%%
+
+\node[draw=none, anchor=north west]
+(references)
+at ($(drug.south west)+(0,-1cm)$)
+{\begin{minipage}{14.5in}
+
+
+\begin{minipage}[t]{\textwidth}
+
+{\bfseries\ffmfamily\Large\underline{References}};
+\vfill
+\vspace{1cm}
+\footnotesize
+[1] Huebsch, N et al. Metabolically-Driven Maturation of hiPSC-Cell Derived Cardiac Chip. Biorxiv (preprint). 2020. https://doi.org/10.1101/485169.
+
+\medskip
+[2] Farnebäck, Gunnar. "Two-frame motion estimation based on polynomial expansion." Scandinavian conference on Image analysis. Springer, Berlin, Heidelberg, 2003.
+\end{minipage}
+
+\end{minipage}};
+
+
+
+%%%% footer %%%%
+\begingroup
+\pgfmathsetseed{31417}
+\fill[simula,
+      drop shadow={shadow yshift=1ex, shadow xshift=-1ex}]
+decorate[decoration={random steps, segment length=1cm, amplitude=4mm}]
+{ ($(current bounding box.south west)+(-1cm,4cm)$) --
+  ($(current bounding box.south east)+(1cm,4cm)$) }
+-- (current bounding box.south east) --
+   (current bounding box.south west) -- cycle;
+\node[anchor=west]
+at ( $(current bounding box.south west)+(1cm,2cm)$ )
+{\includegraphics[height=2cm]{simula_logo_main_black}};
+\endgroup
+
+\end{tikzpicture}
+
+\end{document}
